@@ -1,3 +1,4 @@
+/* Routes for the orders */
 import express from "express";
 import orderCon from "../controllers/order-controller.js";
 import { tokenAuth } from "../middlewares/accessToken-middleware.js";

@@ -1,5 +1,5 @@
+/* Creating the Order Model */
 import mongoose from "mongoose";
-
 const OrderSchema = new mongoose.Schema({
     shippingInfo: {
         address: {

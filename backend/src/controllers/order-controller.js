@@ -4,6 +4,7 @@ import productSer from "../services/product-service.js";
 class OrderController {
     createOrder = async (req, res, next) => {
         try {
+            /* Destructuring the body to get only required data */
             const {
                 shippingInfo,
                 orderItems,
@@ -13,6 +14,7 @@ class OrderController {
                 shippingPrice,
                 totalPrice,
             } = req.body;
+            /* Storing the data in constant variable */
             const data = {
                 shippingInfo,
                 orderItems,
@@ -24,6 +26,7 @@ class OrderController {
                 paidAt: Date.now(),
                 user: req.tokenUser._id,
             };
+            /* Saving the data in database */
             let result = await orderSer.createNewOrder(data);
             res.json({
                 result: result,
@@ -37,6 +40,7 @@ class OrderController {
 
     fetchOrder = async (req, res, next) => {
         try {
+            /* Fetching the order by id */
             let orderList = await orderSer.getOrderById(req.params.id);
             if (!orderList) {
                 next({ status: 404, msg: "Order not found" });
@@ -54,6 +58,7 @@ class OrderController {
 
     userOrders = async (req, res, next) => {
         try {
+            /* Fetching the order by logged in user id stored in the token */
             let myOrders = await orderSer.userOrderById(req.tokenUser._id);
             if (!myOrders) {
                 next({ status: 404, msg: "There is no order to show" });
@@ -70,11 +75,12 @@ class OrderController {
 
     adminOrders = async (req, res, next) => {
         try {
+            /* Fetching all the orders */
             let order = await orderSer.adminOrderLists();
             if (!order) {
                 next({ status: 404, msg: "There is no order to show" });
             }
-
+             /* Calculating the total amount of all the products */
             let totalAmount = 0;
             order.forEach((key) => (totalAmount += key.totalPrice));
 
@@ -91,6 +97,7 @@ class OrderController {
 
     updateOrder = async (req, res, next) => {
         try {
+            /* Fetching the order list by id */
             const order = await orderSer.orderLists(req.params.id);
 
             if (order.orderStatus === "Delivered") {
@@ -99,16 +106,17 @@ class OrderController {
                     msg: "The order has been delivered already",
                 });
             } else {
+                /* Logic for the stock decrement */
                 order.orderItems.forEach(async (key) => {
                     await this.updateStock(key.product, key.quantity);
                 });
-
+                /* Setting the order status */
                 order.orderStatus = req.body.status;
 
                 if (req.body.status === "Delivered") {
                     order.deliveredAt = Date.now();
                 }
-
+                /* Saving the data to the DB */
                 await orderSer.updateOrder(order);
                 res.json({
                     status: true,
@@ -124,8 +132,10 @@ class OrderController {
 
     updateStock = async (id, quantity) => {
         try {
+            /* Fetching the product by id */
             const product = await productSer.getProductById(id);
             product.stock -= quantity;
+            /* Saving the product */
             await productSer.saveProduct(product);
         } catch (error) {
             throw error;
@@ -134,6 +144,7 @@ class OrderController {
 
     deletOrder = async (req, res, next) => {
         try {
+            /* Deleting the order by id */
             const deleteOd = await orderSer.deleteOrderById(req.params.id);
             if (!deleteOd) {
                 next({ status: 404, msg: "Order not found" });
